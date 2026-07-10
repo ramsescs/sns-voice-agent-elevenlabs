@@ -1,0 +1,21 @@
+# Reference-only material — NOT part of this project.
+# The original text-agent MVP is kept locally as a read-only reference to copy
+# tools out of; it is its own git repo and must never be tracked here.
+mvp-sns-voice-agent/
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# OS
+.DS_Store
