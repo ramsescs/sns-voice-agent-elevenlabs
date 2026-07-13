@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "clinical-findings.schema.json",
+  "title": "ClinicalFindings",
+  "description": "Shared request body for both webhook tools (red_flag_check and triage_set). Mirrors the MVP ClinicalFindings Pydantic contract. Only presenting_complaint is required; every other field is optional AND omittable. A missing/absent field means 'not asked' and must NOT be treated as a negative — do not coerce omission to 'none'/false.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["presenting_complaint"],
+  "properties": {
+    "presenting_complaint": {
+      "type": "string",
+      "enum": ["chest_pain", "breathing_difficulty", "fever", "abdominal_pain", "wound"],
+      "description": "The main problem the caller is presenting with. Required."
+    },
+    "pain_score": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Pain intensity 0-10. Omit if not asked/unknown."
+    },
+    "bleeding": {
+      "type": ["string", "null"],
+      "enum": ["none", "minor", "severe", null],
+      "description": "Bleeding severity. Omit if not asked."
+    },
+    "consciousness": {
+      "type": ["string", "null"],
+      "enum": ["alert", "drowsy", "unresponsive", null],
+      "description": "Level of consciousness. Omit if not asked."
+    },
+    "breathing_difficulty": {
+      "type": ["string", "null"],
+      "enum": ["none", "mild", "severe", null],
+      "description": "Difficulty breathing severity. Omit if not asked."
+    },
+    "chest_pain": {
+      "type": ["boolean", "null"],
+      "description": "Whether the caller has chest pain. Omit if not asked."
+    },
+    "chest_pain_radiating": {
+      "type": ["boolean", "null"],
+      "description": "Whether chest pain radiates (arm/jaw/back). Omit if not asked."
+    },
+    "stroke_signs_fast": {
+      "type": ["boolean", "null"],
+      "description": "FAST stroke signs present (face droop, arm weakness, speech difficulty). Omit if not asked."
+    },
+    "allergic_reaction_severe": {
+      "type": ["boolean", "null"],
+      "description": "Severe allergic reaction present. Omit if not asked."
+    },
+    "suicidal_ideation": {
+      "type": ["boolean", "null"],
+      "description": "Suicidal ideation expressed. Omit if not asked."
+    },
+    "onset": {
+      "type": ["string", "null"],
+      "description": "Free-text description of when the complaint started. Omit if not asked."
+    }
+  }
+}
