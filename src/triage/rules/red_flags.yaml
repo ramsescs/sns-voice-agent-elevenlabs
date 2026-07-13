@@ -1,0 +1,55 @@
+# Red-flag rules for the deterministic safety bypass (src/triage/redflag.py).
+#
+# Each rule is a flat map of ClinicalFindings field -> required value. A rule
+# fires when every one of its conditions matches the findings. Rules are
+# evaluated in order; the first match wins.
+#
+# `version` is recorded by the audit log (see issues/004) alongside every
+# triage decision, so any change here must bump it.
+version: "2025-06-22-v1"
+
+rules:
+  - id: chest_pain_radiating
+    description: >
+      Chest pain radiating to the arm or jaw — classic acute coronary
+      syndrome (heart attack) warning sign.
+    conditions:
+      chest_pain_radiating: true
+    rationale: >
+      Chest pain radiating to the arm or jaw can indicate a heart attack.
+      This requires immediate emergency assessment.
+
+  - id: stroke_signs_fast
+    description: >
+      FAST (Face, Arms, Speech, Time) positive stroke signs.
+    conditions:
+      stroke_signs_fast: true
+    rationale: >
+      Signs consistent with the FAST stroke screen (facial drooping, arm
+      weakness, or speech difficulty) require immediate emergency assessment.
+
+  - id: severe_breathing_difficulty
+    description: >
+      Severe difficulty breathing.
+    conditions:
+      breathing_difficulty: severe
+    rationale: >
+      Severe breathing difficulty can be life-threatening and requires
+      immediate emergency assessment.
+
+  - id: severe_allergic_reaction
+    description: >
+      Severe allergic reaction (anaphylaxis).
+    conditions:
+      allergic_reaction_severe: true
+    rationale: >
+      A severe allergic reaction can progress to anaphylaxis and requires
+      immediate emergency assessment.
+
+  - id: suicidal_ideation
+    description: >
+      Patient has expressed suicidal ideation.
+    conditions:
+      suicidal_ideation: true
+    rationale: >
+      Suicidal ideation requires immediate emergency assessment and support.

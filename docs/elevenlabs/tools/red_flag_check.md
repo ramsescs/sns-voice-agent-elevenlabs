@@ -44,13 +44,19 @@ schema exactly.
 Real rule ids (for reference): `chest_pain_radiating`, `stroke_signs_fast`,
 `severe_breathing_difficulty`, `severe_allergic_reaction`, `suicidal_ideation`.
 
-## Mock responses (this iteration)
+## Implementation
 
-- **Fired (emergency demo):**
+Backed by the real deterministic function `redflag.check` in
+[`src/triage/redflag.py`](../../../src/triage/redflag.py) (rules: `rules/red_flags.yaml`), served by
+[`src/triage/toolserver.py`](../../../src/triage/toolserver.py). No longer mocked.
+
+## Example real responses
+
+- **Fired** (input `{"presenting_complaint":"chest_pain","chest_pain_radiating":true}`):
   ```json
-  { "fired": true, "rule_id": "chest_pain_radiating", "rationale": "mock", "rules_version": "mock-0" }
+  { "fired": true, "rule_id": "chest_pain_radiating", "rationale": "Chest pain radiating to the arm or jaw can indicate a heart attack. This requires immediate emergency assessment.", "rules_version": "2025-06-22-v1" }
   ```
-- **Not fired (normal path):**
+- **Not fired** (input `{"presenting_complaint":"fever","pain_score":2}`):
   ```json
-  { "fired": false, "rule_id": null, "rationale": null, "rules_version": "mock-0" }
+  { "fired": false, "rule_id": null, "rationale": null, "rules_version": "2025-06-22-v1" }
   ```

@@ -1,0 +1,29 @@
+[project]
+name = "sns-triage-tools"
+version = "0.1.0"
+description = "Deterministic clinical-safety tools (red-flag + SET) exposed as HTTP webhook server tools for the ElevenLabs triage agent."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "httpx",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

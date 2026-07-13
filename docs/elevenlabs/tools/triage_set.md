@@ -44,9 +44,20 @@ schema exactly.
 Level → channel mapping (real engine): `1,2 → emergency/112`, `3 → urgent care`,
 `4 → primary-care appointment`, `5 → self-care`.
 
-## Mock response (this iteration)
+## Implementation
 
-- **Non-emergency demo:**
+Backed by the real deterministic function `set_engine.classify` in
+[`src/triage/set_engine.py`](../../../src/triage/set_engine.py) (rules: `rules/set_mapping.yaml`),
+served by [`src/triage/toolserver.py`](../../../src/triage/toolserver.py). No longer mocked.
+
+## Example real responses
+
+- **Mild fever, low pain** (input `{"presenting_complaint":"fever","pain_score":2}`):
   ```json
-  { "level": 4, "care_channel": "primary-care appointment", "rationale": "mock", "uncertainty": false }
+  { "level": 5, "care_channel": "self-care", "rationale": "Fever with a low associated pain score and no red-flag discriminators is appropriate for self-care.", "uncertainty": false }
+  ```
+- **Chest pain, no discriminators** — conservative default, over-triages upward with `uncertainty: true`
+  (input `{"presenting_complaint":"chest_pain"}`):
+  ```json
+  { "level": 3, "care_channel": "urgent care", "rationale": "Chest pain with missing discriminator data defaults to an urgent care evaluation under the conservative over-triage policy.", "uncertainty": true }
   ```

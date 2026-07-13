@@ -24,17 +24,36 @@ Key contract rules:
 - Enum string values are **verbatim** — including the `care_channel` values that contain spaces
   and slashes: `self-care`, `primary-care appointment`, `urgent care`, `emergency/112`.
 
-## How they are "fake" this iteration
+## Implementation status — now backed by the real deterministic server
 
-Each tool is registered on the agent as a `POST` webhook with a **placeholder URL**
-(`https://TBD.invalid/tools/...`). The URL is never actually called: we exercise the tools using
-ElevenLabs' **native tool mocking** in Agent Testing (`tool_mock_config` with
-`MockingStrategy: all`). The canned mock responses live in each tool's file and in
-[`../testing/scenarios.md`](../testing/scenarios.md).
+These tools are **no longer fake.** They are implemented in this repo at
+[`src/triage/toolserver.py`](../../../src/triage/toolserver.py), a FastAPI app whose two POST
+endpoints wrap the deterministic safety layer verbatim:
 
-## Fake → real (later slice)
+- `POST /tools/red_flag_check` → `redflag.check` (copied from the MVP into
+  [`src/triage/redflag.py`](../../../src/triage/redflag.py) + `rules/red_flags.yaml`)
+- `POST /tools/triage_set` → `set_engine.classify` (copied into
+  [`src/triage/set_engine.py`](../../../src/triage/set_engine.py) + `rules/set_mapping.yaml`)
 
-1. Build the FastAPI server wrapping `redflag.check` / `set_engine.classify` (copied from the MVP
-   per the repo's copy-not-import rule).
-2. Deploy it (or tunnel it) to a public HTTPS URL.
-3. Replace each tool's placeholder URL with the real endpoint. Done — schemas unchanged.
+The input contract is unchanged (`clinical-findings.schema.json`), so the schemas registered on
+the ElevenLabs tools still match. Covered by `tests/test_toolserver.py` (run `pytest`).
+
+### Running it
+
+```bash
+uvicorn triage.toolserver:app --reload          # serves on http://127.0.0.1:8000
+```
+
+To let the ElevenLabs cloud reach it, expose the local port over a public HTTPS tunnel, e.g.:
+
+```bash
+cloudflared tunnel --url http://localhost:8000  # prints an https://<random>.trycloudflare.com URL
+```
+
+### Fake → real switch (what changes on the platform)
+
+The **only** change on the ElevenLabs side is each tool's URL: replace the `https://example.com/...`
+placeholder with `<public-base>/tools/red_flag_check` and `<public-base>/tools/triage_set`. No
+schema or prompt changes. A `trycloudflare.com` quick-tunnel URL is **ephemeral** — it changes
+every run, so re-point the tools (or use a named/stable tunnel or a deployment) for anything beyond
+a one-off test.

@@ -1,0 +1,208 @@
+# SET-level mapping for the deterministic triage engine (src/triage/set_engine.py).
+#
+# PLACEHOLDER MAPPING — see MAPPING.md for the required provenance note before
+# treating this as clinically authoritative.
+#
+# Each complaint has an ordered `rules` list (first match wins) and a
+# `default` used when no rule matches (missing or ambiguous discriminators).
+# The default always routes to a level no less urgent than the complaint's
+# safest non-self-care option and sets `uncertainty=True` — conservative
+# over-triage, never under-triage, on missing data.
+#
+# A rule's `conditions` is a flat map of ClinicalFindings field -> expected
+# value. A scalar value means equality; a mapping with `min`/`max` means an
+# inclusive numeric range. All conditions in a rule must hold for it to fire.
+#
+# `version` is recorded by the audit log (see issues/004) alongside every
+# triage decision, so any change here must bump it.
+version: "2025-06-22-v1"
+
+care_channel_by_level:
+  1: "emergency/112"
+  2: "emergency/112"
+  3: "urgent care"
+  4: "primary-care appointment"
+  5: "self-care"
+
+complaints:
+  chest_pain:
+    default:
+      level: 3
+      rationale: >
+        Chest pain with missing discriminator data defaults to an urgent
+        care evaluation under the conservative over-triage policy.
+    rules:
+      - id: chest_pain_severe_pain
+        conditions:
+          pain_score: {min: 8}
+        level: 2
+        rationale: >
+          Severe chest pain (pain score 8-10) is treated as a high-risk
+          cardiac presentation.
+      - id: chest_pain_radiating
+        conditions:
+          chest_pain_radiating: true
+        level: 2
+        rationale: >
+          Chest pain radiating to the arm or jaw is a classic acute
+          coronary syndrome discriminator.
+      - id: chest_pain_moderate_pain
+        conditions:
+          pain_score: {min: 5, max: 7}
+        level: 3
+        rationale: >
+          Moderate chest pain (pain score 5-7) warrants an urgent care
+          evaluation.
+      - id: chest_pain_mild_pain
+        conditions:
+          pain_score: {min: 1, max: 4}
+        level: 4
+        rationale: >
+          Mild chest pain with no high-risk discriminators can be seen via
+          a primary-care appointment.
+      - id: chest_pain_zero_pain
+        conditions:
+          pain_score: {min: 0, max: 0}
+        level: 4
+        rationale: >
+          Reported chest pain with a zero pain score still merits a
+          primary-care review rather than self-care.
+
+  breathing_difficulty:
+    default:
+      level: 2
+      rationale: >
+        Breathing difficulty with missing severity data defaults to
+        emergency-level caution under the conservative over-triage policy.
+    rules:
+      - id: breathing_difficulty_severe
+        conditions:
+          breathing_difficulty: "severe"
+        level: 1
+        rationale: >
+          Severe breathing difficulty is treated as a life-threatening
+          presentation requiring immediate emergency assessment.
+      - id: breathing_difficulty_mild
+        conditions:
+          breathing_difficulty: "mild"
+        level: 3
+        rationale: >
+          Mild breathing difficulty warrants an urgent care evaluation.
+      - id: breathing_difficulty_none
+        conditions:
+          breathing_difficulty: "none"
+        level: 4
+        rationale: >
+          A reported breathing-difficulty complaint with no current
+          symptoms still merits a primary-care review.
+
+  fever:
+    default:
+      level: 3
+      rationale: >
+        Fever with missing discriminator data defaults to an urgent care
+        evaluation under the conservative over-triage policy.
+    rules:
+      - id: fever_drowsy
+        conditions:
+          consciousness: "drowsy"
+        level: 1
+        rationale: >
+          Fever with drowsiness raises concern for sepsis or a CNS
+          infection and requires immediate emergency assessment.
+      - id: fever_unresponsive
+        conditions:
+          consciousness: "unresponsive"
+        level: 1
+        rationale: >
+          Fever with unresponsiveness is a medical emergency.
+      - id: fever_high_pain
+        conditions:
+          pain_score: {min: 7}
+        level: 3
+        rationale: >
+          A high associated pain score with fever warrants an urgent care
+          evaluation.
+      - id: fever_moderate_pain
+        conditions:
+          pain_score: {min: 4, max: 6}
+        level: 4
+        rationale: >
+          A moderate associated pain score with fever can be managed via a
+          primary-care appointment.
+      - id: fever_low_pain
+        conditions:
+          pain_score: {min: 0, max: 3}
+        level: 5
+        rationale: >
+          Fever with a low associated pain score and no red-flag
+          discriminators is appropriate for self-care.
+
+  abdominal_pain:
+    default:
+      level: 3
+      rationale: >
+        Abdominal pain with missing discriminator data defaults to an
+        urgent care evaluation under the conservative over-triage policy.
+    rules:
+      - id: abdominal_pain_severe_pain
+        conditions:
+          pain_score: {min: 8}
+        level: 2
+        rationale: >
+          Severe abdominal pain (pain score 8-10) is treated as a
+          high-risk acute abdomen presentation.
+      - id: abdominal_pain_severe_bleeding
+        conditions:
+          bleeding: "severe"
+        level: 2
+        rationale: >
+          Abdominal pain with severe bleeding is a high-risk presentation.
+      - id: abdominal_pain_moderate_pain
+        conditions:
+          pain_score: {min: 5, max: 7}
+        level: 3
+        rationale: >
+          Moderate abdominal pain warrants an urgent care evaluation.
+      - id: abdominal_pain_mild_pain
+        conditions:
+          pain_score: {min: 2, max: 4}
+        level: 4
+        rationale: >
+          Mild-to-moderate abdominal pain can be managed via a
+          primary-care appointment.
+      - id: abdominal_pain_minimal_pain
+        conditions:
+          pain_score: {min: 0, max: 1}
+        level: 5
+        rationale: >
+          Minimal abdominal pain with no high-risk discriminators is
+          appropriate for self-care.
+
+  wound:
+    default:
+      level: 4
+      rationale: >
+        A wound with missing bleeding-severity data defaults to a
+        primary-care review under the conservative over-triage policy.
+    rules:
+      - id: wound_severe_bleeding
+        conditions:
+          bleeding: "severe"
+        level: 2
+        rationale: >
+          A severely bleeding wound is a high-risk presentation requiring
+          emergency care.
+      - id: wound_minor_bleeding
+        conditions:
+          bleeding: "minor"
+        level: 4
+        rationale: >
+          A minor bleeding wound can be managed via a primary-care
+          appointment.
+      - id: wound_no_bleeding
+        conditions:
+          bleeding: "none"
+        level: 5
+        rationale: >
+          A wound with no active bleeding is appropriate for self-care.
