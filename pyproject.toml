@@ -24,6 +24,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# The versioned rule files must ship inside the installed package (a plain
+# `pip install` excludes non-.py files by default; the editable dev install
+# masks this). Without them the engines cannot load and the server won't boot.
+triage = ["rules/*.yaml", "rules/*.md"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]

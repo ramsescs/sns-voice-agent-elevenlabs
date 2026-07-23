@@ -1,0 +1,19 @@
+# Upload only what the container build needs: Dockerfile, pyproject.toml, src/.
+.git/
+.gitignore
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+mvp-sns-voice-agent/
+docs/
+tests/
+.claude/
+.DS_Store
+CLAUDE.md
+README.md

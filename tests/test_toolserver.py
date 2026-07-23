@@ -101,3 +101,25 @@ def test_invalid_enum_value_is_rejected() -> None:
         json={"presenting_complaint": "not_a_real_complaint"},
     )
     assert resp.status_code == 422
+
+
+def test_secret_required_when_configured(monkeypatch) -> None:
+    """With TOOL_WEBHOOK_SECRET set (as deployed), tool calls without the
+    correct X-Tool-Secret header are rejected; /health stays open."""
+    monkeypatch.setenv("TOOL_WEBHOOK_SECRET", "s3cret")
+    payload = {"presenting_complaint": "fever"}
+
+    missing = client.post("/tools/red_flag_check", json=payload)
+    assert missing.status_code == 401
+
+    wrong = client.post(
+        "/tools/triage_set", json=payload, headers={"X-Tool-Secret": "nope"}
+    )
+    assert wrong.status_code == 401
+
+    ok = client.post(
+        "/tools/red_flag_check", json=payload, headers={"X-Tool-Secret": "s3cret"}
+    )
+    assert ok.status_code == 200
+
+    assert client.get("/health").status_code == 200

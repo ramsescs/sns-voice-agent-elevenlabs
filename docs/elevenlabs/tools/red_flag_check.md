@@ -12,9 +12,9 @@ finding.
 | Name | `red_flag_check` |
 | Tool ID | `tool_4201kx6c44kaeqkrw0jtf2p4cz74` |
 | Method | `POST` |
-| URL | `https://example.com/tools/red_flag_check` (placeholder — mocked this iteration; swap for the real endpoint later) |
-| Headers | none |
-| Auth | none |
+| URL | `https://sns-triage-tools-3144072753.europe-west1.run.app/tools/red_flag_check` (Cloud Run, stable) |
+| Headers | `X-Tool-Secret: <TOOL_WEBHOOK_SECRET>` (value in local `.env`) |
+| Auth | shared webhook secret via the header above (server returns 401 without it) |
 | Description (for the LLM) | "Deterministic emergency check. Call whenever a new clinical finding is learned. Returns whether an emergency red flag has fired. If `fired` is true, escalate to 112 immediately and end the call." |
 
 ## Request body
