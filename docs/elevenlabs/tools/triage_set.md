@@ -12,9 +12,9 @@ exactly as returned.
 | Name | `triage_set` |
 | Tool ID | `tool_1101kx6c44v2e9p911cfx4r2rywk` |
 | Method | `POST` |
-| URL | `https://example.com/tools/triage_set` (placeholder — mocked this iteration; swap for the real endpoint later) |
-| Headers | none |
-| Auth | none |
+| URL | `https://sns-triage-tools-3144072753.europe-west1.run.app/tools/triage_set` (Cloud Run, stable) |
+| Headers | `X-Tool-Secret: <TOOL_WEBHOOK_SECRET>` (value in local `.env`) |
+| Auth | shared webhook secret via the header above (server returns 401 without it) |
 | Description (for the LLM) | "Deterministic triage classifier. Call once enough discriminators are gathered. Returns the SET priority level and care channel. Report `level` and `care_channel` to the caller exactly as returned; never assign or change the level yourself." |
 
 ## Request body

@@ -38,22 +38,33 @@ endpoints wrap the deterministic safety layer verbatim:
 The input contract is unchanged (`clinical-findings.schema.json`), so the schemas registered on
 the ElevenLabs tools still match. Covered by `tests/test_toolserver.py` (run `pytest`).
 
-### Running it
+### Deployment (production path)
+
+Deployed on **Google Cloud Run** from the repo's [`Dockerfile`](../../../Dockerfile)
+(project `tfg-ai-voice-agent-sns`, region `europe-west1` — a Tier-1 pricing region so the
+free tier applies; scale-to-zero, ~2–3s cold start, inside the 20s webhook timeout):
 
 ```bash
-uvicorn triage.toolserver:app --reload          # serves on http://127.0.0.1:8000
+gcloud run deploy sns-triage-tools \
+  --source . --region europe-west1 --allow-unauthenticated \
+  --set-env-vars "TOOL_WEBHOOK_SECRET=$TOOL_WEBHOOK_SECRET"   # value in .env (gitignored)
 ```
 
-To let the ElevenLabs cloud reach it, expose the local port over a public HTTPS tunnel, e.g.:
+Stable base URL: `https://sns-triage-tools-3144072753.europe-west1.run.app`. Redeploys are the
+same command; the URL does not change.
+
+**Auth:** `/tools/*` requires the `X-Tool-Secret` header matching the service's
+`TOOL_WEBHOOK_SECRET` env var (401 otherwise; `/health` stays open). Both ElevenLabs tools carry
+the header in their `api_schema.request_headers`. `--allow-unauthenticated` refers only to Google
+IAM (ElevenLabs cannot present Google credentials); the secret header is the access control.
+
+### Running locally (development)
 
 ```bash
-cloudflared tunnel --url http://localhost:8000  # prints an https://<random>.trycloudflare.com URL
+uvicorn triage.toolserver:app --reload          # http://127.0.0.1:8000, auth off unless
+                                                # TOOL_WEBHOOK_SECRET is exported
 ```
 
-### Fake → real switch (what changes on the platform)
-
-The **only** change on the ElevenLabs side is each tool's URL: replace the `https://example.com/...`
-placeholder with `<public-base>/tools/red_flag_check` and `<public-base>/tools/triage_set`. No
-schema or prompt changes. A `trycloudflare.com` quick-tunnel URL is **ephemeral** — it changes
-every run, so re-point the tools (or use a named/stable tunnel or a deployment) for anything beyond
-a one-off test.
+For a quick end-to-end test against the hosted agent without deploying, a cloudflared tunnel
+(`cloudflared tunnel --url http://localhost:8000`) still works — but its URL is ephemeral, so
+re-point the ElevenLabs tools back to the Cloud Run URL afterwards.
